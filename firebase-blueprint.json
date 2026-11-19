@@ -1,0 +1,363 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public-safe user profile container for Amelia companion",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "createdAt", "updatedAt"]
+    },
+    "UserPrivateInfo": {
+      "title": "UserPrivateInfo",
+      "description": "Isolated PII document storing user email",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 160
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "createdAt", "updatedAt"]
+    },
+    "PersonalityConfig": {
+      "title": "PersonalityConfig",
+      "description": "Customizable Amelia personality traits and voice preferences",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "companionName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "userNickname": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "languageStyle": {
+          "type": "string",
+          "enum": ["santai_akrab", "lembut_puitis", "cerdas_dewasa", "campur_inggris"]
+        },
+        "warmth": {
+          "type": "integer"
+        },
+        "playfulness": {
+          "type": "integer"
+        },
+        "affection": {
+          "type": "integer"
+        },
+        "empathy": {
+          "type": "integer"
+        },
+        "voiceName": {
+          "type": "string",
+          "enum": ["Kore", "Zephyr"]
+        },
+        "voiceStylePrompt": {
+          "type": "string",
+          "maxLength": 140
+        },
+        "customInstructions": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "companionName",
+        "userNickname",
+        "languageStyle",
+        "warmth",
+        "playfulness",
+        "affection",
+        "empathy",
+        "voiceName",
+        "voiceStylePrompt",
+        "customInstructions",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "User privacy, voice autoplay, and mood visibility settings",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "autoPlayVoice": {
+          "type": "boolean"
+        },
+        "memoryConsentRequired": {
+          "type": "boolean"
+        },
+        "dailyGreetingEnabled": {
+          "type": "boolean"
+        },
+        "showMoodStatus": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "autoPlayVoice",
+        "memoryConsentRequired",
+        "dailyGreetingEnabled",
+        "showMoodStatus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MemoryItem": {
+      "title": "MemoryItem",
+      "description": "User-approved long-term memory entry for Amelia",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["identitas", "panggilan", "hobi", "preferensi", "aktivitas", "cerita", "komunikasi"]
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "isSensitive": {
+          "type": "boolean"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "sourceExcerpt": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "category",
+        "content",
+        "isSensitive",
+        "active",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ChatSession": {
+      "title": "ChatSession",
+      "description": "Conversation room with roleplay mode and mood state",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "roleplayMode": {
+          "type": "string",
+          "enum": ["natural", "kencan_malam", "study_buddy", "deep_talk", "manja_cemburu", "custom"]
+        },
+        "customRoleplayNote": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "currentMood": {
+          "type": "string",
+          "enum": ["hangat", "ceria", "manja", "empatik", "serius", "menggoda"]
+        },
+        "lastMessagePreview": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "title",
+        "roleplayMode",
+        "customRoleplayNote",
+        "currentMood",
+        "lastMessagePreview",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Individual message inside a user chat session",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant"]
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 12000
+        },
+        "mood": {
+          "type": "string",
+          "enum": ["hangat", "ceria", "manja", "empatik", "serius", "menggoda"]
+        },
+        "attachmentName": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "attachmentMimeType": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "attachmentDataUrl": {
+          "type": "string",
+          "maxLength": 500000
+        },
+        "memorySuggestions": {
+          "type": "array"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "sessionId",
+        "role",
+        "content",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User root profile document"
+    },
+    "/users/{userId}/private/info": {
+      "schema": { "$ref": "#/entities/UserPrivateInfo" },
+      "description": "Isolated PII document for user email"
+    },
+    "/users/{userId}/config/personality": {
+      "schema": { "$ref": "#/entities/PersonalityConfig" },
+      "description": "User's customized Amelia personality settings"
+    },
+    "/users/{userId}/config/settings": {
+      "schema": { "$ref": "#/entities/AppSettings" },
+      "description": "User's app & privacy toggles"
+    },
+    "/users/{userId}/memories/{memoryId}": {
+      "schema": { "$ref": "#/entities/MemoryItem" },
+      "description": "User's long-term memories remembered by Amelia"
+    },
+    "/users/{userId}/sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/ChatSession" },
+      "description": "User's chat sessions"
+    },
+    "/users/{userId}/sessions/{sessionId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Chat messages belonging to a session"
+    }
+  }
+}

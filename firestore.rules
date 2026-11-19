@@ -1,0 +1,322 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.uid == userId;
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'photoURL', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 48
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPrivateInfo(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPersonality(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'companionName', 'userNickname', 'languageStyle',
+          'warmth', 'playfulness', 'affection', 'empathy',
+          'voiceName', 'voiceStylePrompt', 'customInstructions',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'companionName', 'userNickname', 'languageStyle',
+          'warmth', 'playfulness', 'affection', 'empathy',
+          'voiceName', 'voiceStylePrompt', 'customInstructions',
+          'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId == userId && isValidId(data.ownerId)
+        && data.companionName is string && data.companionName.size() >= 1 && data.companionName.size() <= 32
+        && data.userNickname is string && data.userNickname.size() >= 1 && data.userNickname.size() <= 32
+        && data.languageStyle is string && data.languageStyle in ['santai_akrab', 'lembut_puitis', 'cerdas_dewasa', 'campur_inggris']
+        && data.warmth is int && data.warmth >= 0 && data.warmth <= 100
+        && data.playfulness is int && data.playfulness >= 0 && data.playfulness <= 100
+        && data.affection is int && data.affection >= 0 && data.affection <= 100
+        && data.empathy is int && data.empathy >= 0 && data.empathy <= 100
+        && data.voiceName is string && data.voiceName in ['Kore', 'Zephyr']
+        && data.voiceStylePrompt is string && data.voiceStylePrompt.size() <= 140
+        && data.customInstructions is string && data.customInstructions.size() <= 600
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSettings(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'autoPlayVoice', 'memoryConsentRequired',
+          'dailyGreetingEnabled', 'showMoodStatus', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'autoPlayVoice', 'memoryConsentRequired',
+          'dailyGreetingEnabled', 'showMoodStatus', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId == userId && isValidId(data.ownerId)
+        && data.autoPlayVoice is bool
+        && data.memoryConsentRequired is bool
+        && data.dailyGreetingEnabled is bool
+        && data.showMoodStatus is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidMemory(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'category', 'content', 'isSensitive', 'active', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'category', 'content', 'isSensitive', 'active', 'sourceExcerpt', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId == userId && isValidId(data.ownerId)
+        && data.category is string && data.category in ['identitas', 'panggilan', 'hobi', 'preferensi', 'aktivitas', 'cerita', 'komunikasi']
+        && data.content is string && data.content.size() >= 1 && data.content.size() <= 400
+        && data.isSensitive is bool
+        && data.active is bool
+        && (!('sourceExcerpt' in data) || (data.sourceExcerpt is string && data.sourceExcerpt.size() <= 200))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidSession(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'title', 'roleplayMode', 'customRoleplayNote',
+          'currentMood', 'lastMessagePreview', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'title', 'roleplayMode', 'customRoleplayNote',
+          'currentMood', 'lastMessagePreview', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId == userId && isValidId(data.ownerId)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 60
+        && data.roleplayMode is string && data.roleplayMode in ['natural', 'kencan_malam', 'study_buddy', 'deep_talk', 'manja_cemburu', 'custom']
+        && data.customRoleplayNote is string && data.customRoleplayNote.size() <= 500
+        && data.currentMood is string && data.currentMood in ['hangat', 'ceria', 'manja', 'empatik', 'serius', 'menggoda']
+        && data.lastMessagePreview is string && data.lastMessagePreview.size() <= 120
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidMemorySuggestionItem(item) {
+      return item is map
+        && item.keys().hasAll(['tempId', 'category', 'content', 'isSensitive', 'reason'])
+        && item.keys().hasOnly(['tempId', 'category', 'content', 'isSensitive', 'reason'])
+        && item.tempId is string && item.tempId.size() >= 1 && item.tempId.size() <= 128
+        && item.category is string && item.category in ['identitas', 'panggilan', 'hobi', 'preferensi', 'aktivitas', 'cerita', 'komunikasi']
+        && item.content is string && item.content.size() >= 1 && item.content.size() <= 300
+        && item.isSensitive is bool
+        && item.reason is string && item.reason.size() <= 160;
+    }
+
+    function isValidMessage(data, userId, sessionId) {
+      return data.keys().hasAll(['ownerId', 'sessionId', 'role', 'content', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly([
+          'ownerId', 'sessionId', 'role', 'content', 'mood',
+          'attachmentName', 'attachmentMimeType', 'attachmentDataUrl',
+          'memorySuggestions', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId is string && data.ownerId == userId && isValidId(data.ownerId)
+        && data.sessionId is string && data.sessionId == sessionId && isValidId(data.sessionId)
+        && data.role is string && data.role in ['user', 'assistant']
+        && data.content is string && data.content.size() <= 12000
+        && (!('mood' in data) || (data.mood is string && data.mood in ['hangat', 'ceria', 'manja', 'empatik', 'serius', 'menggoda']))
+        && (!('attachmentName' in data) || (data.attachmentName is string && data.attachmentName.size() <= 120))
+        && (!('attachmentMimeType' in data) || (data.attachmentMimeType is string && data.attachmentMimeType.size() <= 64))
+        && (!('attachmentDataUrl' in data) || (data.attachmentDataUrl is string && data.attachmentDataUrl.size() <= 500000))
+        && (!('memorySuggestions' in data) || (
+          data.memorySuggestions is list
+          && data.memorySuggestions.size() <= 2
+          && (data.memorySuggestions.size() == 0 || isValidMemorySuggestionItem(data.memorySuggestions[0]))
+          && (data.memorySuggestions.size() <= 1 || isValidMemorySuggestionItem(data.memorySuggestions[1]))
+        ))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isVerifiedOwner(userId) && isValidId(userId);
+      allow create: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedOwner(userId)
+        && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']);
+      allow delete: if isVerifiedOwner(userId) && isValidId(userId);
+
+      match /private/info {
+        allow get: if isVerifiedOwner(userId) && isValidId(userId);
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidPrivateInfo(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidPrivateInfo(incoming(), userId)
+          && incoming().uid == existing().uid
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt']);
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId);
+      }
+
+      match /config/personality {
+        allow get: if isVerifiedOwner(userId) && isValidId(userId);
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidPersonality(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidPersonality(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'companionName', 'userNickname', 'languageStyle',
+            'warmth', 'playfulness', 'affection', 'empathy',
+            'voiceName', 'voiceStylePrompt', 'customInstructions', 'updatedAt'
+          ]);
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId);
+      }
+
+      match /config/settings {
+        allow get: if isVerifiedOwner(userId) && isValidId(userId);
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidSettings(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidSettings(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'autoPlayVoice', 'memoryConsentRequired',
+            'dailyGreetingEnabled', 'showMoodStatus', 'updatedAt'
+          ]);
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId);
+      }
+
+      match /memories/{memoryId} {
+        allow get: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(memoryId);
+        allow list: if isVerifiedOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(memoryId)
+          && isValidMemory(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(memoryId)
+          && isValidMemory(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'category', 'content', 'isSensitive', 'active', 'updatedAt'
+          ]);
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(memoryId);
+      }
+
+      match /sessions/{sessionId} {
+        allow get: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(sessionId);
+        allow list: if isVerifiedOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(sessionId)
+          && isValidSession(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedOwner(userId)
+          && isValidId(userId)
+          && isValidId(sessionId)
+          && isValidSession(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['title', 'updatedAt'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['roleplayMode', 'customRoleplayNote', 'updatedAt'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['roleplayMode', 'customRoleplayNote', 'currentMood', 'updatedAt'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['currentMood', 'lastMessagePreview', 'updatedAt'])
+            || incoming().diff(existing()).affectedKeys().hasOnly(['title', 'currentMood', 'lastMessagePreview', 'updatedAt'])
+          );
+        allow delete: if isVerifiedOwner(userId) && isValidId(userId) && isValidId(sessionId);
+
+        match /messages/{messageId} {
+          allow get: if isVerifiedOwner(userId)
+            && isValidId(userId)
+            && isValidId(sessionId)
+            && isValidId(messageId);
+          allow list: if isVerifiedOwner(userId) && resource.data.ownerId == request.auth.uid;
+          allow create: if isVerifiedOwner(userId)
+            && isValidId(userId)
+            && isValidId(sessionId)
+            && isValidId(messageId)
+            && isValidMessage(incoming(), userId, sessionId)
+            && incoming().createdAt == request.time
+            && incoming().updatedAt == request.time
+            && exists(/databases/$(database)/documents/users/$(userId)/sessions/$(sessionId))
+            && get(/databases/$(database)/documents/users/$(userId)/sessions/$(sessionId)).data.ownerId == request.auth.uid;
+          allow update: if isVerifiedOwner(userId)
+            && isValidId(userId)
+            && isValidId(sessionId)
+            && isValidId(messageId)
+            && isValidMessage(incoming(), userId, sessionId)
+            && incoming().ownerId == existing().ownerId
+            && incoming().sessionId == existing().sessionId
+            && incoming().createdAt == existing().createdAt
+            && incoming().updatedAt == request.time
+            && incoming().diff(existing()).affectedKeys().hasOnly(['memorySuggestions', 'updatedAt']);
+          allow delete: if isVerifiedOwner(userId)
+            && isValidId(userId)
+            && isValidId(sessionId)
+            && isValidId(messageId);
+        }
+      }
+    }
+  }
+}

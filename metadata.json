@@ -1,0 +1,6 @@
+{
+  "name": "Amelia — AI Virtual Companion",
+  "description": "Teman bicara dan pasangan virtual AI yang hangat, empatik, cerdas, dan personal dengan memori jangka panjang serta interaksi suara.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
